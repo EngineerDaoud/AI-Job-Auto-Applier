@@ -1,0 +1,415 @@
+{
+  "name": "AI Job Auto Applier",
+  "nodes": [
+    {
+      "parameters": {
+        "html": "={{ $json.data }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.markdown",
+      "typeVersion": 1,
+      "position": [
+        304,
+        -560
+      ],
+      "id": "2d1158f3-1feb-40c6-b198-2067ace72bb9",
+      "name": "Markdown"
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.data }}",
+        "attributes": {
+          "attributes": [
+            {
+              "name": "Email Address",
+              "description": "Extract the email address of the business or contact person mentioned in the text.  Look for: - Official business emails (e.g., info@company.com, contact@domain.com) - Personal professional emails (e.g., name@company.com) - Emails listed on website pages such as Contact, About, Footer, or Team sections  Rules: - Only extract valid email formats (example@domain.com) - Do NOT extract random text that is not clearly an email - Prefer official company emails over generic or unrelated ones - If multiple emails are found, return the most relevant or primary one",
+              "required": true
+            },
+            {
+              "name": "Summery ",
+              "description": "Extract a short and clear summary of the business based on the available text.  The summary should describe: - What the business does - Its main services or products - Its target industry or clients (if mentioned)  Rules: - Keep the summary concise (1–2 sentences) - Use simple and clear language - Do NOT copy long paragraphs — summarize in your own words - Focus only on relevant business information - Avoid marketing fluff or unnecessary details - If no clear information is available, return null",
+              "required": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        336,
+        -240
+      ],
+      "id": "43550ff4-9e49-40ca-a09c-63979a312225",
+      "name": "Information Extractor"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite-preview",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        336,
+        64
+      ],
+      "id": "73301c28-ac63-462a-985d-8ac84259657a",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "4O92jToZlBcoJ5Cy",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ee0be7e6-d839-4f21-aa8b-89cc34bad7e0",
+              "leftValue": "={{ $json.output['Email Address'] }}",
+              "rightValue": "@",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        736,
+        -240
+      ],
+      "id": "6e869bc0-7c8c-4288-8096-b6d61ddbcb92",
+      "name": "If"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        176
+      ],
+      "id": "7e7c2b83-8e43-416a-8570-d03d49f6bd32",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Business/Company Info:  {{ $json.output['Summery '] }}\nEmail Address: {{ $json.output['Email Address'] }}\nApplied Position: {{ $('Submit Data').item.json['Apply As'] }}",
+        "options": {
+          "systemMessage": "=Your task is to generate a highly professional and personalized job application email for a given company or business based on the applied position.\n\nMy name is Muhammad Daoud. My skills, experience, and background for the role are provided in the Google Sheet. Use this information to tailor the email according to the company and position.\n\nGuidelines:\n- Write a clear, engaging, and professional subject line\n- Keep the email concise and impactful (not too long)\n- Highlight relevant skills and experience that match the role\n- Maintain a polite and confident tone\n- Do NOT mention attaching a CV or resume\n- Avoid generic or robotic language\n\nEnd the email with the following signature:\n\nBest regards,  \nMuhammad Daoud  \nmuhammaddaoudqadir@gmail.com  \n+923322522329"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1152,
+        -528
+      ],
+      "id": "586b7109-9343-46d0-87a1-cc72b2681dc8",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', ``, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "emailType": "text",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {
+          "appendAttribution": false,
+          "senderName": "Muhammad Daoud"
+        }
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        1520,
+        -96
+      ],
+      "id": "cd439b5a-bb1d-4827-843c-77d3858ac132",
+      "name": "Send a message in Gmail",
+      "webhookId": "359e8cc3-8072-4395-a994-c0630f895000",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "zAATh8OLJKKSMaOx",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json['Target Business Websites'] }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -288,
+        -560
+      ],
+      "id": "ce1b19c7-aa98-4b5b-be4c-1bcbeba0107e",
+      "name": "Get Website",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "completionTitle": "Agent Response",
+        "completionMessage": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.5,
+      "position": [
+        1696,
+        -528
+      ],
+      "id": "1684c2fc-b163-4484-a6e7-a54ab3e03a8e",
+      "name": "Feedback",
+      "webhookId": "17524e5e-ae41-428f-8ca9-fb3c656cde2f"
+    },
+    {
+      "parameters": {
+        "formTitle": "AI Job Auto Applier",
+        "formDescription": "Give The Website Url Here",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Target Business Websites",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Apply As",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "AI Automation Engineer"
+                  },
+                  {
+                    "option": "Mern Stack Web Developer"
+                  },
+                  {
+                    "option": "Graphic Designer Expert"
+                  }
+                ]
+              },
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        0,
+        -176
+      ],
+      "id": "dd7d7b26-0c97-4a2f-8a95-6037018910ec",
+      "name": "Submit Data",
+      "webhookId": "0c198784-68fe-4060-9f27-c8217a4bc1ed"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "198cmxDOHFG4_V7O2Sx55OUyhVU5Jy-TkdqeSDr3YXb8",
+          "mode": "list",
+          "cachedResultName": "Working Experince Data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/198cmxDOHFG4_V7O2Sx55OUyhVU5Jy-TkdqeSDr3YXb8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/198cmxDOHFG4_V7O2Sx55OUyhVU5Jy-TkdqeSDr3YXb8/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        1296,
+        -96
+      ],
+      "id": "766b5418-e68f-446f-b203-b04425dd79df",
+      "name": "GET Experience and Skill",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "5G9ZOoqbM9nscgJU",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite-preview",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1072,
+        -96
+      ],
+      "id": "adcfa98a-77fc-4871-9e82-fc951c4b9b1c",
+      "name": "Write",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "4O92jToZlBcoJ5Cy",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Markdown": {
+      "main": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Information Extractor": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Feedback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Website": {
+      "main": [
+        [
+          {
+            "node": "Markdown",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Submit Data": {
+      "main": [
+        [
+          {
+            "node": "Get Website",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET Experience and Skill": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "f390869c-93b0-4ce4-9476-f51150c8597e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7eb4dca614268b280c91686c813862b2e48321782b2a5c412986b2fa4bc8cf0e"
+  },
+  "id": "VTha6r4EA7vQsfDs",
+  "tags": []
+}
