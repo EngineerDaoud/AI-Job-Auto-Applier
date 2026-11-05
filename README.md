@@ -1,5 +1,3 @@
-# ApplyPilot AI
-
 **Project:** AI Job Auto Applier (n8n workflow)
 
 Give it a company website, and an AI agent writes a personalized job application email based on your skills and sends it for you.
@@ -57,4 +55,4 @@ Form -> Get Website -> HTML to Markdown -> Information Extractor (Gemini)
 
 ## Author
 
-Muhammad Daoud, AI Automation Engineer
+Muhammad Daoud, Agentic AI & Automation Engineer
